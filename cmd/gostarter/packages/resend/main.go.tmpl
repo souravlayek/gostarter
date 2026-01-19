@@ -1,0 +1,26 @@
+package resend
+
+import (
+	"log"
+	"os"
+
+	"github.com/resend/resend-go/v2"
+)
+
+func SendEmailRequest(to []string, subject string, html string) error {
+	apiKey := os.Getenv("RESEND_API_KEY")
+	if apiKey == "" {
+		log.Fatal("RESEND_API_KEY not set")
+	}
+	client := resend.NewClient(apiKey)
+	params := &resend.SendEmailRequest{
+		From:    "Mittler Support <support@souravlayek.com>",
+		To:      to,
+		Html:    html,
+		Subject: subject,
+		ReplyTo: "replyto@souravlayek.com",
+	}
+
+	_, err := client.Emails.Send(params)
+	return err
+}

@@ -1,0 +1,20 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"{{.ModuleName}}/internal/api/handlers"
+	"{{.ModuleName}}/internal/api/router"
+)
+
+func main() {
+	r := router.CreateRoutes()
+
+	// Register handlers
+	r.HandleFunc("/", handlers.HomeHandler)
+	r.HandleFunc("/health", handlers.HealthHandler)
+
+	fmt.Printf("Server starting on :{{.Port}}...\n")
+	log.Fatal(http.ListenAndServe(":{{.Port}}", &r.ServeMux))
+}

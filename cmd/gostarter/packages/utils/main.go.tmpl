@@ -1,0 +1,24 @@
+package utils
+
+import (
+	"fmt"
+	"strings"
+)
+
+// StringContains checks if a string contains a substring (case insensitive)
+func StringContains(str, substr string) bool {
+	return strings.Contains(strings.ToLower(str), strings.ToLower(substr))
+}
+
+// FormatTitle formats a string as a title
+func FormatTitle(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + strings.ToLower(s[1:])
+}
+
+// SafePrint prints a string safely
+func SafePrint(s string) {
+	fmt.Println(s)
+}

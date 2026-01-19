@@ -1,0 +1,40 @@
+package handlers
+
+import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestHomeHandler(t *testing.T) {
+	req, err := http.NewRequest("GET", "/", nil)
+	assert.NoError(t, err)
+	
+	rr := httptest.NewRecorder()
+	HomeHandler(rr, req)
+	
+	assert.Equal(t, http.StatusOK, rr.Code)
+	
+	var response map[string]string
+	err = json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "Welcome to {{.ProjectName}}!", response["message"])
+}
+
+func TestHealthHandler(t *testing.T) {
+	req, err := http.NewRequest("GET", "/health", nil)
+	assert.NoError(t, err)
+	
+	rr := httptest.NewRecorder()
+	HealthHandler(rr, req)
+	
+	assert.Equal(t, http.StatusOK, rr.Code)
+	
+	var response map[string]string
+	err = json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "healthy", response["status"])
+}

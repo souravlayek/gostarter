@@ -1,0 +1,19 @@
+package main
+
+import (
+	"testing"
+)
+
+func TestMain(t *testing.T) {
+	// TODO: Add your tests here
+	expected := "Hello, {{.ProjectName}}!"
+	actual := getGreeting() // assuming you have this function
+	
+	if expected != actual {
+		t.Errorf("Expected %s, got %s", expected, actual)
+	}
+}
+
+func getGreeting() string {
+	return "Hello, {{.ProjectName}}!"
+}

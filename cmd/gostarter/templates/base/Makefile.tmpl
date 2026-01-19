@@ -1,0 +1,11 @@
+# Makefile for {{.ProjectName}}
+
+.PHONY: build start
+
+# Build the project
+build:
+	go build -o bin/{{.ProjectName}} ./cmd/{{.ProjectName}}
+
+# Start the project
+start:
+	go run ./cmd/{{.ProjectName}}
