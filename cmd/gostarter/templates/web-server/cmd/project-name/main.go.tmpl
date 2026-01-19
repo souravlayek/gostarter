@@ -1,20 +1,47 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"expvar"
 	"net/http"
-	"{{.ModuleName}}/internal/api/handlers"
+	"log"
+	"{{.ModuleName}}/utils"
 	"{{.ModuleName}}/internal/api/router"
+	{{if ne .Database ""}}
+	"{{.ModuleName}}/internal/database"
+	{{end}}
+	"{{.ModuleName}}/internal/middleware"
+	// "{{.ModuleName}}/pkg/logger"
 )
 
+
 func main() {
-	r := router.CreateRoutes()
+	// loglerInstance := logger.InitLogger()
+	// defer loglerInstance.Sync()
 
-	// Register handlers
-	r.HandleFunc("/", handlers.HomeHandler)
-	r.HandleFunc("/health", handlers.HealthHandler)
+	if err := utils.LoadEnv(); err != nil {
+		// logger.Logger.Fatal(err)
+		log.Fatal(err)
+	}
 
-	fmt.Printf("Server starting on :{{.Port}}...\n")
-	log.Fatal(http.ListenAndServe(":{{.Port}}", &r.ServeMux))
+	{{if ne .Database ""}}
+	conn := database.ConnectDB()
+	defer conn.Close()
+	{{end}}
+	apiRouter := http.NewServeMux()
+	nestedRouter := router.CreateRoutes()
+	genericMiddlewareStack := middleware.CreateStack(
+		// Add middlewares
+	)
+
+	apiRouter.Handle("/api/", http.StripPrefix("/api", nestedRouter))
+
+	apiRouter.Handle("GET /debug/vars", expvar.Handler())
+
+	server := http.Server{
+		Addr:    ":{{.Port}}",
+		Handler: genericMiddlewareStack(apiRouter),
+	}
+	// logger.Logger.Infow("Server is running on port {{.Port}}")
+	// logger.Logger.Fatal(server.ListenAndServe())
+	log.Fatalln(server.ListenAndServe())
 }

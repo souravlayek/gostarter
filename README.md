@@ -26,7 +26,7 @@ gostarter create [project-name]
 
 #### Options:
 - `--web-server`: Create a web server project with HTTP handlers
-- `--include-tests`: Include test files in the project (default: true)
+- `--include-tests`: Include test files in the project (default: false)
 - `--air`: Setup Air for auto-reloading (web server projects only)
 - `--middlewares`: Comma-separated middleware list (realIP,logger,ratelimit) (web server projects only)
 - `--database`: Database type (mongodb,postgresql) - only works with --web-server flag. For PostgreSQL, includes SQLC for database queries instead of an ORM
