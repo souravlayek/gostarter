@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"github.com/spf13/cobra"
 )
 
@@ -10,6 +11,7 @@ var (
 	includeTestsFlag bool
 	includeAirFlag  bool
 	middlewaresFlag string
+	databaseFlag    string
 	prefixFlag      string
 )
 
@@ -29,8 +31,14 @@ func main() {
 		Long:  `Create command creates a new Go project with a standard directory structure and files.`,
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			// The database flag only works with web server projects
+			if databaseFlag != "" && !webServerFlag {
+				fmt.Println("Error: The --database flag can only be used with --web-server")
+				os.Exit(1)
+			}
+
 			// For now, always include tests when using CLI
-			createProject(args, webServerFlag, includeTestsFlag, includeAirFlag, middlewaresFlag, prefixFlag)
+			createProject(args, webServerFlag, includeTestsFlag, includeAirFlag, middlewaresFlag, databaseFlag, prefixFlag)
 		},
 	}
 
@@ -39,6 +47,7 @@ func main() {
 	createCmd.Flags().BoolVar(&includeTestsFlag, "include-tests", true, "Include test files in the project")
 	createCmd.Flags().BoolVar(&includeAirFlag, "air", false, "Setup Air for auto-reloading (web server projects only)")
 	createCmd.Flags().StringVar(&middlewaresFlag, "middlewares", "", "Comma-separated middleware list (realIP,logger,ratelimit)")
+	createCmd.Flags().StringVar(&databaseFlag, "database", "", "Database type (mongodb,postgresql)")
 	createCmd.Flags().StringVar(&prefixFlag, "prefix", "", "Module prefix (e.g., github.com/username/)")
 
 	var addPkgCmd = &cobra.Command{

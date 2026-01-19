@@ -1,6 +1,6 @@
 # Makefile for {{.ProjectName}}
 
-.PHONY: build start
+.PHONY: build start{{if eq .Database "postgresql"}} sqlc{{end}}
 
 # Build the project
 build:
@@ -8,4 +8,9 @@ build:
 
 # Start the project
 start:
-	go run ./cmd/{{.ProjectName}}
+	{{if eq .Air true}} air {{else}} go run ./cmd/{{.ProjectName}} {{end}}
+{{if eq .Database "postgresql"}}
+# generate ORM
+sqlc:
+	sqlc generate
+{{end}}

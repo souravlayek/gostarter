@@ -29,6 +29,7 @@ gostarter create [project-name]
 - `--include-tests`: Include test files in the project (default: true)
 - `--air`: Setup Air for auto-reloading (web server projects only)
 - `--middlewares`: Comma-separated middleware list (realIP,logger,ratelimit) (web server projects only)
+- `--database`: Database type (mongodb,postgresql) - only works with --web-server flag. For PostgreSQL, includes SQLC for database queries instead of an ORM
 - `--prefix`: Module prefix (e.g., github.com/username/)
 
 ### Examples:
@@ -53,6 +54,16 @@ Create a web server project with specific middleware:
 gostarter create mywebserver --web-server --middlewares realIP,logger
 ```
 
+Create a web server project with MongoDB:
+```bash
+gostarter create mywebserver --web-server --database mongodb
+```
+
+Create a web server project with PostgreSQL (includes SQLC for database queries instead of an ORM):
+```bash
+gostarter create mywebserver --web-server --database postgresql
+```
+
 Create a project with a custom module prefix:
 ```bash
 gostarter create myproject --prefix github.com/username/
@@ -62,6 +73,7 @@ Create a project without test files:
 ```bash
 gostarter create myproject --include-tests=false
 ```
+
 
 ## Adding Packages
 
