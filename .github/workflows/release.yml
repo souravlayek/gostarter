@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags like v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64]
+        exclude:
+          # Exclude unsupported combinations
+          - goos: windows
+            goarch: arm64
+          - goos: darwin
+            goarch: arm64
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Build
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: |
+        mkdir -p dist
+        if [ "$GOOS" = "windows" ]; then
+          go build -o dist/gostarter-${{ matrix.goos }}-${{ matrix.goarch }}.exe ./cmd/gostarter
+        else
+          go build -o dist/gostarter-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/gostarter
+        fi
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: gostarter-${{ matrix.goos }}-${{ matrix.goarch }}
+        path: dist/gostarter-${{ matrix.goos }}-${{ matrix.goarch }}*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to create releases
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download Artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: dist
+
+    - name: Prepare Release Assets
+      run: |
+        mkdir -p release_assets
+        find dist -name "*" -type f -exec cp {} release_assets/ \;
+        ls -la release_assets/
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          release_assets/*
+        draft: false
+        prerelease: false
+        generate_release_notes: true

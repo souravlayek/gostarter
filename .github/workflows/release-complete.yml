@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags like v1.0.0
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for all tags and branches
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Create Release Assets
+        run: |
+          # Make the release script executable
+          chmod +x scripts/release.sh
+          
+          # Run the release script to build binaries and prepare packages
+          ./scripts/release.sh
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/gostarter_*.tar.gz
+            dist/checksums.txt
+            dist/gostarter.rb
+            dist/gostarter.nuspec
+            dist/chocolatey/**
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+  homebrew-update:
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Download release assets
+        uses: actions/download-artifact@v3
+        with:
+          name: release-assets
+          path: ./assets
+
+      - name: Update Homebrew Tap
+        run: |
+          # This step would update the Homebrew tap repository
+          # In practice, you would have a separate repository for the Homebrew tap
+          # and use the GitHub API to update the formula file there
+          echo "Updating Homebrew tap repository..."
+          
+          # Example of how to update the tap (this would require a separate repository):
+          # git clone https://github.com/souravlayek/homebrew-tap.git
+          # # Update the formula file with the new version and SHA256
+          # # Commit and push changes
+          
+          # For now, we'll just show what would be done
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "Version: $VERSION"
+          
+          # Calculate SHA256 for the Linux binary (used in the formula)
+          curl -sL "https://github.com/souravlayek/gostarter/releases/download/$VERSION/gostarter_linux_amd64.tar.gz" | shasum -a 256 | cut -d' ' -f1 > formula_sha256.txt
+          echo "SHA256 for Linux binary: $(cat formula_sha256.txt)"
+
+  chocolatey-update:
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Publish to Chocolatey
+        run: |
+          # This step would publish the package to Chocolatey
+          # In practice, you would need to build the .nupkg file and use choco push
+          echo "Publishing to Chocolatey..."
+          
+          # Example of how to publish to Chocolatey (requires API key):
+          # choco pack gostarter.nuspec
+          # choco push gostarter.VERSION.nupkg --source https://push.chocolatey.org/ --api-key ${{ secrets.CHOCOLATEY_API_KEY }}
+
+  apt-update:
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Update APT Repository
+        run: |
+          # This step would update the APT repository
+          # In practice, you would have a separate repository or server for the APT repo
+          echo "Updating APT repository..."
+          
+          # Example of how to update APT repo (this would require access to the repository):
+          # Copy new packages to the repository
+          # Update package indices
+          # Sign the repository

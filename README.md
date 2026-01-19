@@ -4,11 +4,36 @@ A CLI tool to quickly setup fresh Go projects with a standard directory structur
 
 ## Installation
 
+### Using Go
 ```bash
 go install github.com/souravlayek/gostarter@latest
 ```
 
-Or clone and build from source:
+### Using Package Managers
+
+#### Homebrew (macOS/Linux)
+```bash
+brew install souravlayek/tap/gostarter
+```
+
+#### Chocolatey (Windows)
+```powershell
+choco install gostarter
+```
+
+#### APT (Debian/Ubuntu)
+```bash
+# Add the repository
+curl -fsSL https://example.com/gpg-key | sudo gpg --dearmor -o /usr/share/keyrings/gostarter-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/gostarter-archive-keyring.gpg] https://example.com/apt-repo stable main" | sudo tee /etc/apt/sources.list.d/gostarter.list
+
+# Update and install
+sudo apt-get update
+sudo apt-get install gostarter
+```
+
+### From Source
+Clone and build from source:
 
 ```bash
 git clone https://github.com/souravlayek/gostarter.git

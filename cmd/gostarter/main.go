@@ -2,20 +2,19 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
 var (
-	webServerFlag   bool
+	webServerFlag    bool
 	includeTestsFlag bool
-	includeAirFlag  bool
-	middlewaresFlag string
-	prefixFlag      string
+	includeAirFlag   bool
+	middlewaresFlag  string
+	prefixFlag       string
 )
 
 func main() {
-	// Setup logging
-	setupLogging()
 
 	var rootCmd = &cobra.Command{
 		Use:   "gostarter",

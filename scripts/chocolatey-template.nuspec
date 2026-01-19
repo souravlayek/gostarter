@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>gostarter</id>
+    <version>{{VERSION}}</version>
+    <title>gostarter</title>
+    <authors>Sourav Layek</authors>
+    <description>A CLI tool to quickly setup fresh Go projects with a standard directory structure and files.</description>
+    <summary>A Go project starter CLI tool</summary>
+    <projectUrl>https://github.com/souravlayek/gostarter</projectUrl>
+    <licenseUrl>https://github.com/souravlayek/gostarter/blob/main/LICENSE</licenseUrl>
+    <tags>go golang cli development tools</tags>
+    <owners>souravlayek</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
