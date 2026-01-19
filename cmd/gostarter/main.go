@@ -3,16 +3,17 @@ package main
 import (
 	"fmt"
 	"os"
+
 	"github.com/spf13/cobra"
 )
 
 var (
-	webServerFlag   bool
+	webServerFlag    bool
 	includeTestsFlag bool
-	includeAirFlag  bool
-	middlewaresFlag string
-	databaseFlag    string
-	prefixFlag      string
+	includeAirFlag   bool
+	middlewaresFlag  string
+	databaseFlag     string
+	prefixFlag       string
 )
 
 func main() {
@@ -44,7 +45,7 @@ func main() {
 
 	// Add flags to the create command
 	createCmd.Flags().BoolVar(&webServerFlag, "web-server", false, "Create a web server project")
-	createCmd.Flags().BoolVar(&includeTestsFlag, "include-tests", true, "Include test files in the project")
+	createCmd.Flags().BoolVar(&includeTestsFlag, "include-tests", false, "Include test files in the project")
 	createCmd.Flags().BoolVar(&includeAirFlag, "air", false, "Setup Air for auto-reloading (web server projects only)")
 	createCmd.Flags().StringVar(&middlewaresFlag, "middlewares", "", "Comma-separated middleware list (realIP,logger,ratelimit)")
 	createCmd.Flags().StringVar(&databaseFlag, "database", "", "Database type (mongodb,postgresql)")

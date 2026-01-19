@@ -4,6 +4,7 @@ import (
 	"net/http"
 
     "{{.ModuleName}}/internal/middleware"
+    "{{.ModuleName}}/internal/api/handlers"
 )
 
 
@@ -20,11 +21,20 @@ func (mr *MyCustomRouter) HandlerFuncWithMiddleware(pattern string, mdw []middle
 	mr.Handle(pattern, stackedMiddleWare(handlerFunc))
 }
 
-func CreateRoutes() *MyCustomRouter {
-    router := NewCustomRouter()
-    v1Router := NewCustomRouter()
-    router.Handle("/v1/", http.StripPrefix("/v1", &v1Router.ServeMux))
-    // Add your routes
 
-    return router
+func CreateRoutes() *MyCustomRouter {
+	router := NewCustomRouter()
+	v1Router := NewCustomRouter()
+	router.Handle("/v1/", http.StripPrefix("/v1", &v1Router.ServeMux))
+	// Add your routes
+	v1Router.Handle("/auth/", http.StripPrefix("/auth", CreateHomeRoutes()))
+
+	return router
+}
+
+func CreateHomeRoutes() *http.ServeMux {
+	homeRouter := NewCustomRouter()
+	homeRouter.HandleFunc("GET /", handlers.HomeHandler)
+
+	return &homeRouter.ServeMux
 }
