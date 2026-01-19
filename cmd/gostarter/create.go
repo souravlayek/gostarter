@@ -11,7 +11,7 @@ import (
 )
 
 // createProject handles the project creation functionality
-func createProject(args []string, isWebServer bool, includeTests bool, includeAir bool, middlewares string, prefix string) {
+func createProject(args []string, isWebServer bool, includeTests bool, includeAir bool, middlewares string, database string, prefix string) {
 	var projectName string
 	if len(args) > 0 {
 		projectName = args[0]
@@ -70,10 +70,12 @@ func createProject(args []string, isWebServer bool, includeTests bool, includeAi
 	projectData := map[string]interface{}{
 		"ProjectName": projectName,
 		"ModuleName":  modulePath,
-		"Description": fmt.Sprintf("A new Go project created with gostarter."),
+		"Description": "A new Go project created with gostarter.",
 		"Author":      "Your Name",
 		"Port":        "8080",
 		"Host":        "localhost",
+		"Air":         true,
+		"Database":    database,
 	}
 
 	// Copy the entire template directory structure
@@ -118,6 +120,10 @@ func createProject(args []string, isWebServer bool, includeTests bool, includeAi
 		}
 	}
 
+	// Handle database option if specified
+	if database != "" {
+		setupDatabase(database, projectData)
+	}
 
 	// If Air is enabled and it's a web server project, copy the air.toml file
 	if includeAir && isWebServer {
@@ -145,42 +151,6 @@ func createProject(args []string, isWebServer bool, includeTests bool, includeAi
 				}
 			}
 		}
-
-		// Also create a Makefile that supports Air
-		airMakefileContent := `# Makefile for {{.ProjectName}}
-
-.PHONY: build start install-air
-
-# Build the project
-build:
-	go build -o bin/{{.ProjectName}} ./cmd/{{.ProjectName}}
-
-# Install Air for live reloading (optional)
-install-air:
-	go install github.com/cosmtrek/air@latest
-
-# Start the project with Air
-start:
-	air
-`
-		// Create the Makefile with processed template
-		tmpl, err := template.New("Makefile").Parse(airMakefileContent)
-		if err != nil {
-			log.Printf("Warning: Error parsing Makefile template: %v", err)
-		} else {
-			file, err := os.Create("Makefile")
-			if err != nil {
-				log.Printf("Warning: Error creating Makefile: %v", err)
-			} else {
-				err = tmpl.Execute(file, projectData)
-				if err != nil {
-					log.Printf("Warning: Error executing Makefile template: %v", err)
-					file.Close()
-				} else {
-					file.Close()
-				}
-			}
-		}
 	}
 
 	fmt.Printf("Project '%s' has been created successfully!\n", projectName)
@@ -188,21 +158,20 @@ start:
 	// Display next steps
 	fmt.Println("\nNext steps:")
 	fmt.Printf("1. cd %s\n", projectName)
-	fmt.Println("2. Run 'make build' to build the project")
-	fmt.Println("3. Run 'make start' to start the project")
+	fmt.Println("2. run `go mod tidy`")
+	fmt.Println("\nRun 'make build' to build the project")
+	fmt.Println("Run 'make start' to start the project")
 
 	if includeAir {
-		fmt.Println("4. Install air using 'make install-air' or 'go install github.com/cosmtrek/air@latest'")
-		fmt.Println("5. Run 'air' to start with hot reload")
+		fmt.Println("\nInstall air using go install github.com/cosmtrek/air@latest")
+	}
+	if database == "postgresql" {
+		fmt.Println("\nInstall sqlc using go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest")
+		fmt.Println("We use sqlc for ORM you can checkout more details at https://docs.sqlc.dev/en/stable/tutorials/getting-started-postgresql.html")
 	}
 
 	fmt.Printf("\nYour project is ready! Enjoy coding!\n")
-
-	// Print instructions for installing third-party packages
-	fmt.Println("\nTo install required third-party packages, run:")
-	fmt.Println("go mod tidy")
 }
-
 
 // processMiddleware handles the middleware files based on user selection
 func processMiddleware(middlewares string, projectData map[string]interface{}) {
@@ -270,8 +239,8 @@ func copyTemplateDir(templateDir string, projectData map[string]interface{}, inc
 
 	for _, entry := range entries {
 		if entry.IsDir() {
-			// Skip the middleware directory during general copy since it's handled separately
-			if entry.Name() == "middleware" {
+			// Skip the middleware and database directories during general copy since they're handled separately
+			if entry.Name() == "middleware" || entry.Name() == "database" {
 				continue
 			}
 
@@ -329,6 +298,168 @@ func copyTemplateDir(templateDir string, projectData map[string]interface{}, inc
 	return nil
 }
 
+// setupDatabase creates the database structure based on the selected database type
+func setupDatabase(dbType string, projectData map[string]interface{}) {
+	// Create the database directory inside internal
+	err := os.MkdirAll("internal/database", 0755)
+	if err != nil {
+		log.Printf("Warning: Error creating internal/database directory: %v", err)
+		return
+	}
+
+	// Create the main database file
+	var dbContent []byte
+
+	switch dbType {
+	case "mongodb":
+		dbContent, err = templateFiles.ReadFile("templates/web-server/internal/database/mongodb.go.tmpl")
+		if err != nil {
+			log.Printf("Warning: Error reading MongoDB template: %v", err)
+			// Use a default MongoDB implementation
+			dbContent = []byte(`package database
+
+import (
+	"context"
+	"log"
+	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+var DB *mongo.Database
+
+// ConnectDB connects to MongoDB
+func ConnectDB() {
+	// Replace with your MongoDB connection string
+	connectionString := "mongodb://localhost:27017"
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	opts := options.Client().ApplyURI(connectionString).SetServerAPIOptions(serverAPI)
+
+	client, err := mongo.Connect(context.TODO(), opts)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Set global DB variable
+	DB = client.Database("{{.ProjectName}}")
+
+	// Send ping to confirm successful connection
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatal("Failed to connect to MongoDB:", err)
+	}
+
+	log.Println("Connected to MongoDB successfully!")
+}
+`)
+		}
+	case "postgresql":
+		dbContent, err = templateFiles.ReadFile("templates/web-server/internal/database/postgresql.go.tmpl")
+		if err != nil {
+			log.Printf("Warning: Error reading PostgreSQL template: %v", err)
+			// Use a default PostgreSQL implementation
+			dbContent = []byte(`package database
+
+import (
+	"database/sql"
+	"log"
+
+	_ "github.com/lib/pq"
+)
+
+var DB *sql.DB
+
+// ConnectDB connects to PostgreSQL
+func ConnectDB() {
+	// Replace with your PostgreSQL connection string
+	connectionString := "host=localhost port=5432 user=username password=password dbname={{.ProjectName}} sslmode=disable"
+	var err error
+	DB, err = sql.Open("postgres", connectionString)
+	if err != nil {
+		log.Fatal("Failed to connect to PostgreSQL:", err)
+	}
+
+	err = DB.Ping()
+	if err != nil {
+		log.Fatal("Failed to ping PostgreSQL:", err)
+	}
+
+	log.Println("Connected to PostgreSQL successfully!")
+}
+`)
+		}
+	default:
+		log.Printf("Warning: Unsupported database type '%s'. Supported types: mongodb, postgresql", dbType)
+		return
+	}
+
+	// Process the template
+	tmpl, err := template.New("database.go.tmpl").Parse(string(dbContent))
+	if err != nil {
+		log.Printf("Warning: Error parsing database template: %v", err)
+		return
+	}
+
+	// Create the database file
+	file, err := os.Create("internal/database/main.go")
+	if err != nil {
+		log.Printf("Warning: Error creating database file: %v", err)
+		return
+	}
+	defer file.Close()
+
+	err = tmpl.Execute(file, projectData)
+	if err != nil {
+		log.Printf("Warning: Error executing database template: %v", err)
+		return
+	}
+
+	// For PostgreSQL, create additional directories and files
+	if dbType == "postgresql" {
+		// Create migrations directory inside database
+		err = os.MkdirAll("internal/database/migrations", 0755)
+		if err != nil {
+			log.Printf("Warning: Error creating migrations directory: %v", err)
+		}
+
+		// Create query directory inside database
+		err = os.MkdirAll("internal/database/query", 0755)
+		if err != nil {
+			log.Printf("Warning: Error creating internal/database/query directory: %v", err)
+		}
+
+		// Create sqlc.yaml file for PostgreSQL projects
+		sqlcContent, err := templateFiles.ReadFile("templates/web-server/sqlc.yaml.tmpl")
+		if err != nil {
+			log.Printf("Warning: Error reading sqlc.yaml template: %v", err)
+		} else {
+			// Create the file with processed template
+			tmpl, err := template.New("sqlc.yaml.tmpl").Parse(string(sqlcContent))
+			if err != nil {
+				log.Printf("Warning: Error parsing sqlc.yaml template: %v", err)
+			} else {
+				file, err := os.Create("sqlc.yaml")
+				if err != nil {
+					log.Printf("Warning: Error creating sqlc.yaml: %v", err)
+				} else {
+					err = tmpl.Execute(file, projectData)
+					if err != nil {
+						log.Printf("Warning: Error executing sqlc.yaml template: %v", err)
+						file.Close()
+					} else {
+						file.Close()
+					}
+				}
+			}
+		}
+
+	}
+}
+
 // copyTemplateDirRecursive copies a subdirectory recursively
 func copyTemplateDirRecursive(srcPath, destPath string, projectData map[string]interface{}, includeTests bool, includeAir bool) error {
 	// Create destination directory
@@ -359,8 +490,8 @@ func copyTemplateDirRecursive(srcPath, destPath string, projectData map[string]i
 		srcFilePath := srcPath + "/" + entry.Name()
 
 		if entry.IsDir() {
-			// Skip the middleware directory during general copy since it's handled separately
-			if entry.Name() == "middleware" {
+			// Skip the middleware and database directories during general copy since they're handled separately
+			if entry.Name() == "middleware" || entry.Name() == "database" {
 				continue
 			}
 

@@ -1,0 +1,38 @@
+package database
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+var MyClient *mongo.Client
+var DB *mongo.Database
+
+func ConnectDB() {
+	dbName := os.Getenv("DB_NAME")
+	dbPath := os.Getenv("MONGO_URI")
+	if dbName == "" || dbPath == "" {
+		log.Fatal("DB_NAME and MONGO_URI must be set")
+	}
+
+	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
+	connectionURI := dbPath
+	clientOptions := options.Client().
+		ApplyURI(connectionURI).
+		SetServerAPIOptions(serverAPIOptions)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, clientOptions)
+	MyClient = client
+	DB = client.Database(dbName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Database connected successfully")
+}
