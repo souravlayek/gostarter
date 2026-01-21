@@ -74,7 +74,7 @@ func createProject(args []string, isWebServer bool, includeTests bool, includeAi
 		"Author":      "Your Name",
 		"Port":        "8080",
 		"Host":        "localhost",
-		"Air":         true,
+		"Air":         includeAir,
 		"Database":    database,
 	}
 
@@ -162,11 +162,10 @@ func createProject(args []string, isWebServer bool, includeTests bool, includeAi
 	fmt.Println("\nRun 'make build' to build the project")
 	fmt.Println("Run 'make start' to start the project")
 
-	if includeAir {
-		fmt.Println("\nInstall air using go install github.com/cosmtrek/air@latest")
+	if includeAir || database == "postgresql" {
+		fmt.Println("\nInstall required development tools using: make install-tools")
 	}
 	if database == "postgresql" {
-		fmt.Println("\nInstall sqlc using go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest")
 		fmt.Println("We use sqlc for ORM you can checkout more details at https://docs.sqlc.dev/en/stable/tutorials/getting-started-postgresql.html")
 	}
 
