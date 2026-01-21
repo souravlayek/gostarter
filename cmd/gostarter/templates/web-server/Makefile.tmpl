@@ -1,6 +1,6 @@
 # Makefile for {{.ProjectName}}
 
-.PHONY: build start{{if eq .Database "postgresql"}} sqlc{{end}}
+.PHONY: build start{{if or (eq .Air true) (eq .Database "postgresql")}}{{if eq .Database "postgresql"}} sqlc migrateup migratedown{{end}} install-tools{{end}}
 
 # Build the project
 build:
@@ -9,8 +9,33 @@ build:
 # Start the project
 start:
 	{{if eq .Air true}} air {{else}} go run ./cmd/{{.ProjectName}} {{end}}
+{{if or (eq .Air true) (eq .Database "postgresql")}}
+# Install required development tools
+install-tools:
+	@echo "Installing required development tools..."
+{{if eq .Air true}}
+	@which air > /dev/null || (echo "Installing air..." && go install github.com/cosmtrek/air@latest)
+{{end}}
 {{if eq .Database "postgresql"}}
+	@which sqlc > /dev/null || (echo "Installing sqlc..." && go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest)
+	@which migrate > /dev/null || (echo "Installing migrate..." && echo "Please install migrate manually using: curl -L https://github.com/golang-migrate/migrate/releases/download/\$$version/migrate.\$$os-\$$arch.tar.gz | tar xvz")
+{{end}}
+	@echo "All required tools are installed!"
+{{end}}
+
+{{if eq .Database "postgresql"}}
+# Database connection string
+db := <Your Database URL>
+
 # generate ORM
 sqlc:
 	sqlc generate
+
+# Run database migrations up
+migrateup:
+	migrate -path ./internal/database/migration -database "$(db)" -verbose up
+
+# Run database migrations down
+migratedown:
+	migrate -path ./internal/database/migration -database "$(db)" -verbose down
 {{end}}
