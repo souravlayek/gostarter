@@ -107,6 +107,36 @@ gostarter add-middleware logger
 
 This will add the logger middleware to your project's `internal/middleware/logger.go` file.
 
+## Generate .env.example from .env
+
+Generate a template version of your environment file with values masked:
+
+```bash
+gostarter env-to-example
+```
+
+#### Options:
+- `-f, --file`: Specify the input .env file to convert (default: .env)
+
+### Examples:
+
+Generate .env.example from the default .env file:
+```bash
+gostarter env-to-example
+```
+
+Generate .env.example from a specific file:
+```bash
+gostarter env-to-example --file myenvironment.env
+```
+
+Generate .env.example using the short flag:
+```bash
+gostarter env-to-example -f myenvironment.env
+```
+
+This command will create a .env.example file with the same variable names but empty values, ideal for committing to version control while keeping sensitive information secure.
+
 ## Features
 
 - Quick project scaffolding with standard Go project structure

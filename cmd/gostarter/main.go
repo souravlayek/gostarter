@@ -14,6 +14,7 @@ var (
 	middlewaresFlag  string
 	databaseFlag     string
 	prefixFlag       string
+	inputFile        string
 )
 
 func main() {
@@ -99,9 +100,22 @@ func main() {
 
 	addMiddlewareCmd.Flags().BoolP("list", "l", false, "List all available middleware")
 
+	var envToExampleCmd = &cobra.Command{
+		Use:   "env-to-example",
+		Short: "Generate .env.example from .env file",
+		Long:  `Generate .env.example from an existing .env file, masking sensitive values.`,
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			envToExample()
+		},
+	}
+
+	envToExampleCmd.Flags().StringVarP(&inputFile, "file", "f", ".env", "Input .env file to convert")
+
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(addPkgCmd)
 	rootCmd.AddCommand(addMiddlewareCmd)
+	rootCmd.AddCommand(envToExampleCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)
