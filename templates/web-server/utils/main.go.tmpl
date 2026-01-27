@@ -2,7 +2,7 @@ package utils
 
 import (
 	"github.com/joho/godotenv"
-	"github.com/souravlayek/user-manager/pkg/logger"
+	// "{{.ModuleName}}/pkg/logger"
 )
 
 func LoadEnv() error {
@@ -10,6 +10,6 @@ func LoadEnv() error {
 	if err != nil {
 		return err
 	}
-	logger.Logger.Infow("ENV LOADED")
+	// logger.Logger.Infow("ENV LOADED")
 	return nil
 }

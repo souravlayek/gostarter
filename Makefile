@@ -1,2 +1,2 @@
 build:
-	go build ./cmd/gostarter
+	go build -o gostarter .
